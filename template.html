@@ -1,0 +1,884 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>58 from Nový Prosek</title>
+<meta name="theme-color" content="#80166F">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap">
+<style>
+/* Layout: one narrow column, phone-first. Hero answers "when do I leave", then the buses, then the delay chart. */
+:root{
+  --bg:#F5F3F6; --card:#FFFFFF; --fg:#1C1620; --muted:#6A6070; --line:#E2DCE5;
+  --accent:#80166F; --accent-ink:#FFFFFF; --accent-soft:#F3E4F0;
+  --good:#1D7A4C; --warn:#A86200; --bad:#BF2F28; --pid:#2F6FB0;
+  --f-display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#130F15; --card:#1D1820; --fg:#F2EDF3; --muted:#A59AA9; --line:#332B37;
+  --accent:#D06BBE; --accent-ink:#1A0716; --accent-soft:#3A1D35;
+  --good:#53C48D; --warn:#F0A63E; --bad:#FF6F63; --pid:#7AB0EA;
+  color-scheme:dark;
+}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.4 var(--f-body);
+  padding:env(safe-area-inset-top,0px) max(16px,env(safe-area-inset-right,0px)) calc(24px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.wrap{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:18px;padding-top:14px}
+.num{font-variant-numeric:tabular-nums}
+header{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.badge{font:700 22px/1 var(--f-display);background:var(--accent);color:var(--accent-ink);border-radius:6px;padding:6px 9px 5px;letter-spacing:.02em}
+.where{display:flex;flex-direction:column;min-width:0;flex:1}
+.where b{font:600 20px/1.1 var(--f-display);letter-spacing:.01em}
+.where span{color:var(--muted);font-size:14px}
+button{font:inherit;color:inherit;background:none;border:1px solid var(--line);border-radius:8px;padding:8px 12px;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.refresh{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:13px}
+.refresh button{color:var(--fg);font-weight:600;font-size:14px}
+
+.hero{background:var(--accent);color:var(--accent-ink);border-radius:14px;padding:18px 18px 16px;display:flex;flex-direction:column;gap:6px}
+.hero .lbl{font:600 13px/1 var(--f-body);text-transform:uppercase;letter-spacing:.08em;opacity:.8}
+.hero .big{font:700 clamp(44px,13vw,64px)/1 var(--f-display);letter-spacing:-.01em}
+.hero .sub{font-size:17px;font-weight:500}
+.hero .why{font-size:14px;opacity:.85}
+.hero .next{font-size:14px;opacity:.85;border-top:1px solid color-mix(in srgb,var(--accent-ink) 25%,transparent);padding-top:8px;margin-top:4px}
+
+h2{font:600 14px/1 var(--f-body);text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0}
+.section{display:flex;flex-direction:column;gap:10px}
+.list{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.row{display:grid;grid-template-columns:64px 1fr auto;gap:4px 12px;padding:12px 14px;border-top:1px solid var(--line);align-items:center}
+.row:first-child{border-top:0}
+.row .eta{font:700 26px/1 var(--f-display)}
+.row .sched{color:var(--muted);font-size:13px;grid-column:1;grid-row:2}
+.row .info{grid-column:2;grid-row:1/3;min-width:0;display:flex;flex-direction:column;gap:2px}
+.row .info .st{font-weight:600;font-size:15px;overflow-wrap:anywhere}
+.row .info .det{color:var(--muted);font-size:13px;overflow-wrap:anywhere}
+.row .chip{grid-column:3;grid-row:1/3;font:600 15px/1 var(--f-display);padding:6px 8px;border-radius:6px;white-space:nowrap;text-align:center;min-width:54px}
+.row.dim{opacity:.55}
+.row.catch{background:var(--accent-soft)}
+.chip.ok{color:var(--good);background:color-mix(in srgb,var(--good) 14%,transparent)}
+.chip.mid{color:var(--warn);background:color-mix(in srgb,var(--warn) 16%,transparent)}
+.chip.bad{color:var(--bad);background:color-mix(in srgb,var(--bad) 14%,transparent)}
+.chip.na{color:var(--muted);background:color-mix(in srgb,var(--muted) 14%,transparent)}
+.trend-up{color:var(--bad)} .trend-down{color:var(--good)}
+
+.seg{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 10px;padding:9px 14px;border-top:1px solid var(--line);align-items:baseline}
+.seg:first-child{border-top:0}
+.seg .nm{font-size:14px;font-weight:500;overflow-wrap:anywhere}
+.seg .val{font:600 16px/1 var(--f-display);text-align:right;white-space:nowrap}
+.seg .sub{grid-column:1/-1;font-size:12px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center}
+.seg .val.ok{color:var(--good)} .seg .val.mid{color:var(--warn)} .seg .val.bad{color:var(--bad)} .seg .val.na{color:var(--muted);font:12px var(--f-body)}
+.lane{font-size:11px;font-weight:600;padding:2px 6px;border-radius:4px;background:color-mix(in srgb,var(--pid) 16%,transparent);color:var(--pid)}
+.note{font-size:12.5px;color:var(--muted)}
+.trend{font-weight:600} .trend.up{color:var(--bad)} .trend.down{color:var(--good)}
+.chart{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 6px 6px}
+.chart svg{display:block;width:100%;height:auto}
+.chart svg text{font:12px var(--f-body);fill:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--muted);padding:4px 10px 4px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+
+.settings{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.stepper{display:flex;align-items:center;gap:8px}
+.stepper button{width:38px;height:38px;padding:0;font-size:20px;line-height:1}
+.stepper output{font:700 22px/1 var(--f-display);min-width:3ch;text-align:center}
+label.tog{display:flex;align-items:center;gap:8px;font-size:15px}
+input[type=checkbox]{width:20px;height:20px;accent-color:var(--accent)}
+select{font:inherit;color:var(--fg);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:6px 8px}
+.settings .note{flex-basis:100%}
+.stale{color:var(--warn);font-weight:600}
+.msg{border-radius:10px;padding:10px 12px;font-size:14px;background:color-mix(in srgb,var(--warn) 14%,var(--card));border:1px solid color-mix(in srgb,var(--warn) 40%,transparent)}
+.tablewrap{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:12px}
+table.acc{border-collapse:collapse;width:100%;font-size:13.5px}
+table.acc th,table.acc td{padding:8px 7px;text-align:right;border-top:1px solid var(--line);white-space:nowrap}
+table.acc thead th{border-top:0;font-weight:600;color:var(--muted);font-size:12px;white-space:normal;vertical-align:bottom}
+table.acc th:first-child,table.acc td:first-child{text-align:left}
+table.acc tbody th{font-weight:500}
+table.acc td.win{color:var(--good);font-weight:600}
+table.acc td.warn{color:var(--bad);font-weight:600}
+.accbtns{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center}
+#accText{width:100%;min-height:120px;font:12px/1.4 ui-monospace,monospace;background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:8px}
+footer{color:var(--muted);font-size:12.5px;line-height:1.5}
+footer a{color:inherit}
+@media (prefers-reduced-motion:no-preference){.spin{animation:spin 1s linear infinite;display:inline-block}@keyframes spin{to{transform:rotate(360deg)}}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="badge">58</div>
+    <div class="where"><b>Nový Prosek → Palmovka</b><span>Trolleybus 58, stop B</span></div>
+    <div class="refresh"><span id="upd" class="num">Loading…</span><button id="btnRefresh" type="button">Refresh</button></div>
+  </header>
+
+  <div id="msg" class="msg" hidden></div>
+
+  <section class="hero" aria-live="polite">
+    <div class="lbl" id="heroLbl">Leave</div>
+    <div class="big num" id="heroBig">…</div>
+    <div class="sub num" id="heroSub">Reading live positions of line 58</div>
+    <div class="why" id="heroWhy"></div>
+    <div class="next num" id="heroNext" hidden></div>
+  </section>
+
+  <section class="section">
+    <h2>Next buses at Nový Prosek</h2>
+    <div class="list" id="list"></div>
+  </section>
+
+  <section class="section">
+    <h2>Road to Nový Prosek right now</h2>
+    <div class="list" id="road"></div>
+    <div class="note" id="roadNote"></div>
+  </section>
+
+  <section class="section">
+    <h2>Delay at Nový Prosek, bus by bus</h2>
+    <div class="chart"><div id="chart"></div>
+      <div class="legend"><span><i style="background:var(--fg)"></i>Arrived (actual)</span><span><i style="background:var(--accent)"></i>My prediction, with range</span><span><i style="background:var(--pid)"></i>PID's estimate</span></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>Accuracy log</h2>
+    <div class="note" id="accSummary"></div>
+    <div class="tablewrap"><table id="accTable" class="acc">
+      <thead><tr><th>Ahead</th><th>Buses</th><th>Mine</th><th>PID</th><th>My bias</th><th>In range</th><th>Too early</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+    <div id="accRecentWrap" hidden>
+      <div class="note">Latest buses (prediction made about 5 min before)</div>
+      <div class="tablewrap"><table class="acc">
+        <thead><tr><th>Bus</th><th>Arrived</th><th>Mine</th><th>PID</th><th>Ahead</th></tr></thead>
+        <tbody id="accRecent"></tbody>
+      </table></div>
+    </div>
+    <div class="accbtns">
+      <button type="button" id="accCopy">Copy log as CSV</button>
+      <button type="button" id="accClear">Clear log</button>
+      <span class="note" id="accMsg" aria-live="polite"></span>
+    </div>
+    <textarea id="accText" readonly hidden aria-label="Accuracy log as CSV"></textarea>
+  </section>
+
+  <section class="settings">
+    <div class="stepper"><button type="button" id="walkMinus" aria-label="Less walking time">−</button><output id="walk" class="num">5</output><button type="button" id="walkPlus" aria-label="More walking time">+</button><span>min walk to the stop</span></div>
+    <label class="tog" for="autoMode">Auto-refresh every minute
+      <select id="autoMode">
+        <option value="wifi">on Wi-Fi only</option>
+        <option value="always">always</option>
+        <option value="never">never</option>
+      </select></label>
+    <div class="note" id="netNote"></div>
+  </section>
+
+  <footer>
+    <div>Live data: PID GTFS-realtime feed (api.golemio.cz), about 4 MB per refresh. <span id="usage" class="num"></span></div>
+    <div>How it predicts: from where the bus is now (GPS), it adds up how long each remaining stop-to-stop stretch took in the last 20 minutes. That uses every 58 and every bus line sharing the stretch (136, 201, 195, 110 and others), and extends each stretch's trend to when the bus gets there. A trolleybus standing still between stops, or overdue at its next stop, counts as held up. One that hasn't left the terminus yet can't leave before its previous trip ends plus a 2-minute turnaround. The leave time uses the early end of the range, so you're less likely to miss the bus.</div>
+    <div id="ttInfo"></div>
+  </footer>
+</div>
+
+<script>
+const TT = __TIMETABLE__;
+const ROUTE = TT.route, TARGET = TT.target;
+const FEED_TU = 'https://api.golemio.cz/v2/vehiclepositions/gtfsrt/trip_updates.pb';
+const FEED_VP = 'https://api.golemio.cz/v2/vehiclepositions/gtfsrt/vehicle_positions.pb';
+const MIN = 60e3;
+const SHARED = TT.shared, SHARED_ROUTES = new Set(Object.keys(SHARED.routes));
+const wanted = r => r === ROUTE || SHARED_ROUTES.has(r);
+// stop-to-stop stretches the 58 drives before Nový Prosek, in route order
+const SEGS = new Map();
+for (const P of TT.patterns) for (let i = 0; i + 1 < P.length; i++) {
+  const k = P[i][1] + '>' + P[i + 1][1];
+  if (!SEGS.has(k)) SEGS.set(k, { a: P[i][1], b: P[i + 1][1] });
+}
+const LONGEST = TT.patterns.reduce((a, b) => (b.length > a.length ? b : a));
+
+/* ---------- storage (per device, optional) ---------- */
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+};
+const settings = Object.assign({ walk: 5, autoMode: 'wifi' }, store.get('b58.settings', {}));
+delete settings.auto; // older setting
+
+/* ---------- Wi-Fi vs mobile data ---------- */
+// Chrome on Android reports the connection type; Safari and Firefox don't, and then we assume mobile data.
+const conn = navigator.connection || null;
+function netKind() {
+  const t = conn && conn.type;
+  if (t === 'wifi' || t === 'ethernet') return 'wifi';
+  if (t === 'none') return 'offline';
+  if (t === 'cellular' || t === 'bluetooth' || t === 'wimax') return 'data';
+  return 'unknown';
+}
+function autoOn() {
+  if (settings.autoMode === 'always') return true;
+  if (settings.autoMode === 'never') return false;
+  return netKind() === 'wifi';
+}
+const OPEN_AGAIN = 10 * MIN; // coming back after this long counts as opening the page again: one fetch
+let obs = store.get('b58.obs', {}); // key "date|trip" -> {d:{stopId:delaySec}, S:schedTargetMs, at:actualTargetMs, t:lastSeenMs}
+let accLog = store.get('b58.acc', []); // [{k:tripKey, b:leadBucketMin, t:loggedAt, m:mode, e:eta, lo:early, hi:late, p:pidEta|null, a:actual|null}]
+let segObs = store.get('b58.seg', {}); // "stopA>stopB" -> [[actualDepartureAtA ms, runningTimeSec, tripKey, line]]
+
+/* ---------- minimal protobuf reader for GTFS-realtime ---------- */
+const td = new TextDecoder();
+function walk(b, s, e, cb) {
+  let p = s;
+  const vi = () => { let n = 0, lo = 0, sh = 0, x; do { x = b[p++]; if (sh < 32) lo |= (x & 127) << sh; if (sh < 53) n += (x & 127) * 2 ** sh; sh += 7; } while (x & 128); return [n, lo | 0]; };
+  while (p < e) {
+    const k = vi()[0], f = Math.floor(k / 8), w = k % 8;
+    if (w === 0) { const [n, lo] = vi(); cb(f, 0, n, lo); }
+    else if (w === 2) { const l = vi()[0], st = p; p += l; cb(f, 2, st, st + l); }
+    else if (w === 5) { const v = new DataView(b.buffer, b.byteOffset + p, 4).getFloat32(0, true); p += 4; cb(f, 5, v); }
+    else if (w === 1) { p += 8; cb(f, 1); }
+    else throw new Error('Unexpected protobuf wire type ' + w);
+  }
+}
+const str = (b, s, e) => td.decode(b.subarray(s, e));
+function tripDesc(b, s, e) {
+  const t = {};
+  walk(b, s, e, (f, w, a, c) => {
+    if (w === 2) { if (f === 1) t.tripId = str(b, a, c); else if (f === 2) t.startTime = str(b, a, c); else if (f === 3) t.startDate = str(b, a, c); else if (f === 5) t.routeId = str(b, a, c); }
+    else if (w === 0 && f === 4) t.rel = a;
+  });
+  return t;
+}
+function stEvent(b, s, e) { let d = null; walk(b, s, e, (f, w, a, lo) => { if (f === 1 && w === 0) d = lo; }); return d; }
+function vehLabel(b, s, e) { let l = null; walk(b, s, e, (f, w, a, c) => { if (f === 2 && w === 2) l = str(b, a, c); }); return l; }
+function parseTU(b) {
+  const out = [];
+  walk(b, 0, b.length, (f, w, s, e) => {
+    if (f !== 2 || w !== 2) return;
+    walk(b, s, e, (f2, w2, s2, e2) => {
+      if (f2 !== 3 || w2 !== 2) return;
+      let trip = null, veh = null; const stus = [];
+      walk(b, s2, e2, (f3, w3, a, c) => { if (w3 !== 2) return; if (f3 === 1) trip = tripDesc(b, a, c); else if (f3 === 2) stus.push([a, c]); else if (f3 === 3) veh = [a, c]; });
+      if (!trip || !wanted(trip.routeId)) return;
+      const stops = stus.map(([a, c]) => {
+        const u = {};
+        walk(b, a, c, (f4, w4, x, y) => {
+          if (w4 === 0) { if (f4 === 1) u.seq = x; else if (f4 === 5) u.rel = x; }
+          else if (w4 === 2) { if (f4 === 2) u.arr = stEvent(b, x, y); else if (f4 === 3) u.dep = stEvent(b, x, y); else if (f4 === 4) u.stop = str(b, x, y); }
+        });
+        return u;
+      });
+      out.push({ ...trip, stops, label: veh ? vehLabel(b, veh[0], veh[1]) : null });
+    });
+  });
+  return out;
+}
+function parseVP(b) {
+  const byTrip = {}, byLabel = {};
+  walk(b, 0, b.length, (f, w, s, e) => {
+    if (f !== 2 || w !== 2) return;
+    walk(b, s, e, (f2, w2, s2, e2) => {
+      if (f2 !== 4 || w2 !== 2) return;
+      let trip = null, seq = null, ts = 0, label = null, lat = null, lon = null;
+      walk(b, s2, e2, (f3, w3, a, c) => {
+        if (w3 === 2) {
+          if (f3 === 1) trip = tripDesc(b, a, c); else if (f3 === 8) label = vehLabel(b, a, c);
+          else if (f3 === 2) walk(b, a, c, (f4, w4, x) => { if (w4 === 5) { if (f4 === 1) lat = x; else if (f4 === 2) lon = x; } });
+        }
+        else if (w3 === 0) { if (f3 === 3) seq = a; else if (f3 === 5) ts = a * 1000; }
+      });
+      if (!trip || !wanted(trip.routeId)) return;
+      const v = { key: trip.startDate + '|' + trip.tripId, seq, ts, label, lat, lon };
+      byTrip[v.key] = v; if (label && trip.routeId === ROUTE) byLabel[label] = v;
+    });
+  });
+  return { byTrip, byLabel };
+}
+
+/* ---------- Prague time ---------- */
+const dtf = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Prague', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' });
+function parts(ms) { const o = {}; for (const p of dtf.formatToParts(new Date(ms))) o[p.type] = p.value; return o; }
+function offMs(ms) { const p = parts(ms); return Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour, +p.minute, +p.second) - Math.floor(ms / 1000) * 1000; }
+const baseCache = {};
+function dayBase(ds) { if (baseCache[ds] != null) return baseCache[ds]; const n = Date.UTC(+ds.slice(0, 4), +ds.slice(4, 6) - 1, +ds.slice(6, 8), 12); return (baseCache[ds] = n - offMs(n) - 12 * 3600e3); }
+const ymd = ms => { const p = parts(ms); return p.year + p.month + p.day; };
+const hm = ms => { const p = parts(ms); return p.hour + ':' + p.minute; };
+const hmRound = ms => hm(Math.round(ms / MIN) * MIN);
+const hmFloor = ms => hm(Math.floor(ms / MIN) * MIN);
+const secOf = t => { const [h, m, s] = t.split(':').map(Number); return h * 3600 + m * 60 + (s || 0); };
+const fmtDelay = s => { const m = Math.round(s / 60); return (m > 0 ? '+' : m < 0 ? '−' : '±') + Math.abs(m) + ' min'; };
+const name = id => TT.stops[id] || id;
+
+function serviceActive(sid, ds) {
+  const c = TT.calendar[sid]; if (!c) return false;
+  const ex = TT.exceptions[sid];
+  if (ex) { if (ex.remove.includes(ds)) return false; if (ex.add.includes(ds)) return true; }
+  const dow = (new Date(Date.UTC(+ds.slice(0, 4), +ds.slice(4, 6) - 1, +ds.slice(6, 8))).getUTCDay() + 6) % 7;
+  if (c.days[dow] !== '1') return false;
+  if (ds > TT.feedEnd) return true; // embedded timetable expired: assume the weekly pattern repeats
+  return ds >= c.start && ds <= c.end;
+}
+
+/* ---------- trip instances ---------- */
+const tripIdx = new Map(TT.trips.map(t => [t[0], t]));
+function makeInstance(tid, ds, t0, pi) {
+  const P = TT.patterns[pi], base = dayBase(ds) + t0 * 1000;
+  const stops = P.map(([seq, stop, a, d]) => ({ seq, stop, arr: base + a * 1000, dep: base + d * 1000 }));
+  return { key: ds + '|' + tid, tid, ds, stops, start: stops[0].dep, S: stops[stops.length - 1].arr, tu: null, vp: null };
+}
+function matchPattern(tu) {
+  const i = tu.stops.findIndex(u => u.stop === TARGET); if (i < 0) return -1;
+  const sub = tu.stops.slice(0, i + 1), last = sub[sub.length - 1];
+  return TT.patterns.findIndex(P => P[P.length - 1][0] === last.seq && P[P.length - 1][1] === TARGET && sub.every(u => P.some(p => p[0] === u.seq && p[1] === u.stop)));
+}
+
+let feed = null;           // {tu:[], vp:{byTrip,byLabel}, at:ms}
+let bytesUsed = 0, fetching = false, lastError = null, usedFallback = false;
+
+function buildInstances(now) {
+  const inst = new Map(); usedFallback = false;
+  if (feed) for (const tu of feed.tu) {
+    if (tu.routeId !== ROUTE) continue;
+    let tt = tripIdx.get(tu.tripId), pi, t0;
+    if (tt) { pi = tt[3]; t0 = tt[2]; }
+    else { pi = matchPattern(tu); if (pi < 0) continue; t0 = secOf(tu.startTime); usedFallback = true; }
+    const I = makeInstance(tu.tripId, tu.startDate, t0, pi);
+    I.tu = tu; I.vp = feed.vp.byTrip[I.key] || null; I.cancelled = tu.rel === 3;
+    inst.set(I.key, I);
+  }
+  for (const ds of [ymd(now - 6 * 3600e3), ymd(now)]) for (const t of TT.trips) {
+    if (!serviceActive(t[1], ds)) continue;
+    const key = ds + '|' + t[0]; if (inst.has(key)) continue;
+    const I = makeInstance(t[0], ds, t[2], t[3]);
+    if (I.S < now - 20 * MIN || I.S > now + 150 * MIN) continue;
+    inst.set(key, I);
+  }
+  return [...inst.values()];
+}
+
+function annotate(I, now) {
+  const live = new Map(); if (I.tu) for (const u of I.tu.stops) live.set(u.stop, u);
+  for (const s of I.stops) { const u = live.get(s.stop); s.dArr = u ? (u.arr ?? u.dep ?? null) : null; s.dDep = u ? (u.dep ?? u.arr ?? null) : null; s.passed = s.left = false; }
+  const T = I.stops[I.stops.length - 1];
+  I.mode = 'timetable'; I.passedTarget = false;
+  if (!I.tu) return;
+  if (I.vp && I.vp.seq != null) {
+    I.mode = 'live';
+    // PID's current_stop_sequence is the stop the vehicle is at or last passed (checked against GPS)
+    for (const s of I.stops) { s.passed = s.seq <= I.vp.seq; s.left = s.seq < I.vp.seq; }
+    I.passedTarget = I.vp.seq >= T.seq;
+  } else {
+    const other = I.tu.label && feed.vp.byLabel[I.tu.label];
+    if (other && other.key !== I.key) { I.mode = 'waiting'; I.prevTrip = other; }
+    else if (now > I.start + 2 * MIN) { // no position for this vehicle: fall back to the delays the feed reports
+      I.mode = 'blind';
+      for (const s of I.stops) s.left = s.passed = s.dDep != null && s.dep + s.dDep * 1000 < now - 30e3;
+      I.passedTarget = T.passed;
+      if (!I.stops.some(s => s.passed)) I.mode = 'waiting';
+    } else I.mode = 'waiting';
+  }
+}
+
+function recordObs(I, now) {
+  if (!I.tu || !(I.mode === 'live' || I.mode === 'blind')) return;
+  const o = obs[I.key] || (obs[I.key] = { d: {}, S: I.S });
+  for (const s of I.stops) if (s.passed && s.dDep != null) o.d[s.stop] = s.stop === TARGET ? s.dArr : s.dDep;
+  const T = I.stops[I.stops.length - 1];
+  if (I.passedTarget && T.dArr != null) o.at = I.S + T.dArr * 1000;
+  o.t = now;
+}
+function pruneObs(now) { for (const k in obs) if (!obs[k].t || obs[k].t < now - 8 * 3600e3) delete obs[k]; }
+
+function wMedian(items) { // [{v,w}]
+  if (!items.length) return null;
+  const a = [...items].sort((x, y) => x.v - y.v), tot = a.reduce((s, x) => s + x.w, 0);
+  let acc = 0; for (const x of a) { acc += x.w; if (acc >= tot / 2) return x.v; } return a[a.length - 1].v;
+}
+
+/* ---------- stretch-by-stretch running times, from the 58 and every line sharing the road ---------- */
+const sharedIdx = new Map(SHARED.trips.map(t => [t[0], t]));
+function addSegObs(st, key, line) {
+  for (let i = 0; i + 1 < st.length; i++) {
+    const A = st[i], B = st[i + 1];
+    if (B.seq !== A.seq + 1 || !A.left || !B.left || A.dDep == null) continue;
+    const k = A.stop + '>' + B.stop; if (!SEGS.has(k)) continue;
+    const toTarget = B.stop === TARGET, dB = toTarget ? B.dArr : B.dDep; if (dB == null) continue;
+    const tA = A.dep + A.dDep * 1000, tB = (toTarget ? B.arr : B.dep) + dB * 1000, r = (tB - tA) / 1000;
+    if (r < 0 || r > 1800) continue;
+    const L = segObs[k] || (segObs[k] = []), ex = L.find(o => o[2] === key);
+    if (ex) { ex[0] = tA; ex[1] = r; } else L.push([tA, r, key, line]);
+  }
+}
+function sharedObs() {
+  if (!feed) return;
+  for (const tu of feed.tu) {
+    if (tu.routeId === ROUTE) continue;
+    const t = sharedIdx.get(tu.tripId); if (!t) continue;
+    const key = tu.startDate + '|' + tu.tripId, vp = feed.vp.byTrip[key];
+    if (!vp || vp.seq == null) continue;
+    const P = SHARED.patterns[t[2]], base = dayBase(tu.startDate) + t[1] * 1000;
+    const live = new Map(tu.stops.map(u => [u.seq, u]));
+    const st = P.map(([seq, stop, a, d]) => {
+      const u = live.get(seq);
+      return { seq, stop, arr: base + a * 1000, dep: base + d * 1000, dArr: u ? (u.arr ?? u.dep ?? null) : null, dDep: u ? (u.dep ?? u.arr ?? null) : null, left: seq < vp.seq };
+    });
+    addSegObs(st, key, SHARED.routes[tu.routeId]);
+  }
+}
+function pruneSeg(now) {
+  for (const k in segObs) { segObs[k] = segObs[k].filter(o => o[0] > now - 40 * MIN); if (!segObs[k].length) delete segObs[k]; }
+}
+const segSched = (A, B) => ((B.stop === TARGET ? B.arr : B.dep) - A.dep) / 1000;
+// Stretch running time from the last 20 minutes. With tEnter given, the stretch's trend is projected
+// to the moment this bus will start driving it (morning jams build up; they don't stay flat).
+function theilSen(pts) {
+  const s = [];
+  for (let i = 0; i < pts.length; i++) for (let j = i + 1; j < pts.length; j++) {
+    const dx = pts[j].x - pts[i].x; if (Math.abs(dx) >= 1) s.push((pts[j].y - pts[i].y) / dx);
+  }
+  return s.length >= 3 ? median(s) : null;
+}
+function segEst(k, now, tEnter) {
+  const L = (segObs[k] || []).filter(o => o[0] >= now - 20 * MIN && o[0] <= now + MIN);
+  if (!L.length) return null;
+  const items = L.map(o => ({ v: o[1], w: Math.exp(-Math.max(0, now - o[0]) / (8 * MIN)) }));
+  const r = wMedian(items), W = items.reduce((s, x) => s + x.w, 0);
+  const mad = wMedian(items.map(x => ({ v: Math.abs(x.v - r), w: x.w })));
+  let slope = null; // seconds of running time gained per minute of clock time
+  if (L.length >= 4) {
+    const pts = L.map(o => ({ x: (o[0] - now) / MIN, y: o[1] }));
+    const span = Math.max(...pts.map(p => p.x)) - Math.min(...pts.map(p => p.x));
+    if (span >= 6) { slope = theilSen(pts); if (slope != null) slope = Math.max(-10, Math.min(20, slope)); }
+  }
+  let rp = r;
+  if (slope != null && tEnter != null) {
+    const tc = L.reduce((s, o, i) => s + items[i].w * (o[0] - now) / MIN, 0) / W; // weighted centre of the reports, min
+    const h = Math.min(20, Math.max(0, (tEnter - now) / MIN) - tc);
+    rp = Math.max(0.7 * r, Math.min(2.5 * r + 30, r + 0.6 * slope * h));
+  }
+  return { r: rp, rNow: r, slope, W, n: L.length, sd: L.length > 1 ? 1.4 * mad + 5 : 0.3 * r + 15, lines: [...new Set(L.map(o => o[3]))], last: Math.max(...L.map(o => o[0])) };
+}
+// Road-wide slowdown, used for stretches nobody drove in the last 20 minutes
+function roadFactor(now) {
+  let sr = 0, ss = 0;
+  for (let i = 0; i + 1 < LONGEST.length; i++) {
+    const k = LONGEST[i][1] + '>' + LONGEST[i + 1][1], e = segEst(k, now); if (!e) continue;
+    const sched = (i + 2 === LONGEST.length ? LONGEST[i + 1][2] : LONGEST[i + 1][3]) - LONGEST[i][3];
+    sr += e.r; ss += sched;
+  }
+  return ss >= 120 ? Math.max(0.85, Math.min(2, sr / ss)) : 1;
+}
+
+/* ---------- when can a trolleybus that is still on its previous trip leave the terminus? ---------- */
+const LAYOVER = 2 * MIN; // shortest turnaround assumed at Miškovice / Čakovice
+function tripEnd(tu, now) {
+  const b = TT.blocks[tu.tripId]; if (!b) return null;
+  const base = dayBase(tu.startDate), vp = feed.vp.byTrip[tu.startDate + '|' + tu.tripId];
+  let cur = 0, last = null;
+  for (const u of tu.stops) { if (!last || u.seq > last.seq) last = u; }
+  if (vp && vp.seq != null) {
+    let best = null; for (const u of tu.stops) if (u.seq <= vp.seq && (!best || u.seq > best.seq)) best = u;
+    if (best) cur = best.dep ?? best.arr ?? 0;
+  }
+  const lastPred = last ? (last.arr ?? last.dep ?? null) : null;
+  return { start: base + b[0] * 1000, dur: (b[1] - b[0]) * 1000, end: base + b[1] * 1000 + Math.max(cur, lastPred ?? cur) * 1000 };
+}
+function vehicleReady(I, now) {
+  if (!feed || !I.tu || !I.tu.label) return null;
+  const label = I.tu.label, cur = feed.vp.byLabel[label];
+  if (!cur || cur.key === I.key) return null;
+  const chain = feed.tu.filter(t => t.routeId === ROUTE && t.label === label)
+    .map(t => ({ t, key: t.startDate + '|' + t.tripId, start: dayBase(t.startDate) + secOf(t.startTime) * 1000 }))
+    .sort((a, b) => a.start - b.start);
+  const ci = chain.findIndex(c => c.key === cur.key), ii = chain.findIndex(c => c.key === I.key);
+  if (ci < 0 || ii <= ci) return null;
+  const e0 = tripEnd(chain[ci].t, now); if (!e0) return null;
+  let end = Math.max(e0.end, now + 30e3);
+  for (let j = ci + 1; j < ii; j++) { const e = tripEnd(chain[j].t, now); if (!e) return null; end = Math.max(e.start, end + LAYOVER) + e.dur; }
+  return { back: end, ready: end + LAYOVER, hops: ii - ci };
+}
+
+/* ---------- GPS: how far along the current stretch, and is it standing still? ---------- */
+const posHist = {}; // tripKey -> [{lat, lon, ts}]
+function trackPositions() {
+  for (const v of Object.values(feed.vp.byTrip)) {
+    if (v.lat == null) continue;
+    const h = posHist[v.key] || (posHist[v.key] = []);
+    if (!h.length || h[h.length - 1].ts !== v.ts) h.push({ lat: v.lat, lon: v.lon, ts: v.ts });
+    if (h.length > 10) h.shift();
+  }
+}
+const distM = (a, b) => Math.hypot((a[0] - b[0]) * 111320, (a[1] - b[1]) * 71400);
+function gpsState(I, A, B, now) {
+  const v = I.vp;
+  if (!v || v.lat == null || now - v.ts > 90e3 || v.seq !== A.seq) return null;
+  const ca = TT.coords[A.stop], cb = TT.coords[B.stop]; if (!ca || !cb) return null;
+  const p = [v.lat, v.lon], dA = distM(p, ca), dB = distM(p, cb);
+  const frac = Math.max(0, Math.min(0.95, dA / (dA + dB || 1)));
+  let stillFor = 0;
+  if (dA > 60 && dB > 60) { // standing at a stop is normal; standing between stops is not
+    const h = posHist[I.key] || [];
+    for (let j = h.length - 1; j >= 0; j--) { if (distM([h[j].lat, h[j].lon], p) < 25) stillFor = v.ts - h[j].ts; else break; }
+  }
+  return { frac, stillFor, still: stillFor >= 60e3 };
+}
+
+function predict(I, now, ctx) {
+  const T = I.stops[I.stops.length - 1], moving = I.mode === 'live' || I.mode === 'blind';
+  let i0 = 0;
+  if (moving) I.stops.forEach((s, i) => { if (s.passed && s.dDep != null) i0 = i; });
+  const from = I.stops[i0];
+  let t, ready = null, gps = null;
+  if (moving) t = from.dep + (from.dDep ?? 0) * 1000;
+  else {
+    t = Math.max(from.dep + (from.dDep ?? 0) * 1000, now);
+    if (I.mode === 'waiting' && (ready = vehicleReady(I, now))) t = Math.max(t, ready.ready);
+  }
+  let v = 0, stuck = false, ahead = 0, nObs = 0, rising = 0; const lines = new Set();
+  for (let i = i0; i + 1 < I.stops.length; i++) {
+    const A = I.stops[i], B = I.stops[i + 1], sched = segSched(A, B), e = segEst(A.stop + '>' + B.stop, now, t);
+    let r, sd;
+    if (e) {
+      r = (e.W * e.r + 0.5 * sched) / (e.W + 0.5); sd = e.sd; nObs += e.n; e.lines.forEach(l => lines.add(l));
+      rising += e.r - e.rNow;
+    } else { r = sched * ctx.factor; sd = 0.3 * r + 20; }
+    let tn = t + r * 1000;
+    if (i === i0 && moving) {
+      gps = I.mode === 'live' ? gpsState(I, A, B, now) : null;
+      if (gps) { // fresh position: remaining part of this stretch from where it actually is
+        tn = Math.max(now + r * (1 - gps.frac) * 1000 + (gps.still ? Math.min(gps.stillFor / 2, 120e3) : 0), now + 15e3); // a jam that held it 2 min likely holds it ~1 more
+        if (gps.still) stuck = true;
+      } else if (tn < now + 15e3) { // overdue at the next stop: it's held up right now
+        if (now - tn > 45e3) stuck = true;
+        tn = now + Math.max(15, 0.3 * r) * 1000;
+      }
+    }
+    ahead += r - sched; v += sd * sd; t = tn;
+  }
+  const next = I.stops[i0 + 1];
+  const curDelay = moving ? Math.max(from.dDep ?? 0, next ? (now - next.arr) / 1000 : 0) : Math.max(from.dDep ?? 0, (now - from.dep) / 1000);
+  let eta = Math.max(t, T.arr - 60e3, now + 30e3); // buses wait at timing points rather than run early
+  let sig = 35 + Math.sqrt(v);
+  if (I.mode === 'waiting') sig += ready ? 45 : 60;
+  if (I.mode === 'blind') sig += 45;
+  if (I.mode === 'timetable') sig = Math.max(sig, 150);
+  const early = Math.max(now, eta - sig * 1000), late = eta + 1.4 * sig * 1000;
+  const pid = I.tu && T.dArr != null ? T.arr + T.dArr * 1000 : null;
+  return { eta, early, late, D: (eta - T.arr) / 1000, from, curDelay, ahead, rising, nObs, lines: [...lines], stuck, gps, ready, pid };
+}
+
+/* ---------- rendering ---------- */
+const $ = id => document.getElementById(id);
+function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+function chipClass(D) { return D < 120 ? 'ok' : D < 360 ? 'mid' : 'bad'; }
+
+function roadNote(p) {
+  if (!p.nObs) return null;
+  const m = Math.round(p.ahead / 60);
+  const who = p.lines.length ? ` (${p.nObs} reports: ${p.lines.slice(0, 4).join(', ')})` : '';
+  const trend = p.rising >= 45 ? `, getting slower (+${Math.round(p.rising / 60 * 10) / 10} min by the time it gets there)` : p.rising <= -45 ? ', easing off' : '';
+  return (m >= 1 ? `road ahead ${m} min slower than timetable` : m <= -1 ? `road ahead ${-m} min faster than timetable` : 'road ahead on time') + trend + who;
+}
+function describe(I, p, now) {
+  if (I.cancelled) return ['Cancelled', 'PID marks this trip as cancelled'];
+  if (I.mode === 'live' || I.mode === 'blind') {
+    const left = I.stops.filter(s => !s.passed).length;
+    let st = (p.gps && p.gps.still ? `Standing still ${Math.round(p.gps.stillFor / MIN)} min after ` : p.stuck ? 'Held up after ' : 'At/after ') + name(p.from.stop);
+    st += left <= 1 ? ' · next stop is yours' : ` · ${left} stops away`;
+    const det = ['now ' + fmtDelay(p.curDelay)];
+    const rn = roadNote(p); if (rn) det.push(rn);
+    if (p.pid != null) det.push('PID says ' + hmRound(p.pid));
+    if (I.mode === 'blind') det.push('position not reported');
+    return [st, det.join(' · ')];
+  }
+  if (I.mode === 'waiting') {
+    const late = now > I.start;
+    const st = late ? `Not left ${name(I.stops[0].stop)} yet (due ${hm(I.start)})` : `Departs ${name(I.stops[0].stop)} ${hm(I.start)}`;
+    const det = [];
+    if (p.ready) det.push(p.ready.ready > I.start + 30e3
+      ? `trolleybus ${I.tu.label} gets back to ${name(I.stops[0].stop)} late, ~${hmRound(p.ready.back)}; can leave ~${hmRound(p.ready.ready)}`
+      : `trolleybus ${I.tu.label} back at ${name(I.stops[0].stop)} ~${hmRound(p.ready.back)}, in time`);
+    else if (I.prevTrip) det.push(`trolleybus ${I.tu.label} still on its previous trip`);
+    const rn = roadNote(p); if (rn) det.push(rn);
+    if (p.pid != null) det.push('PID says ' + hmRound(p.pid));
+    return [st, det.join(' · ')];
+  }
+  if (now > I.start + 2 * MIN) return ['No live data', 'Should be on the way but isn\'t reporting. May be cancelled or not tracked'];
+  const rn = p && roadNote(p);
+  return [`Departs ${name(I.stops[0].stop)} ${hm(I.start)}`, 'Timetable only for now' + (rn ? ' · ' + rn : '')];
+}
+
+/* ---------- accuracy log ---------- */
+// For each bus, keep the first prediction made about 15, 10, 5 and 2 minutes before it was expected,
+// then fill in the real arrival once the bus passes Nový Prosek.
+const BUCKETS = [[2, 1, 3], [5, 3, 7], [10, 7, 12], [15, 12, 20]]; // [label, from min, to min]
+function logPredictions(upcoming, now) {
+  let changed = false;
+  for (const { I, p } of upcoming) {
+    if (!p || I.mode === 'timetable') continue;
+    const lead = (p.eta - now) / MIN, b = BUCKETS.find(([, lo, hi]) => lead >= lo && lead < hi);
+    if (!b || accLog.some(x => x.k === I.key && x.b === b[0])) continue;
+    accLog.push({ k: I.key, s: I.S, b: b[0], t: now, m: I.mode, e: Math.round(p.eta), lo: Math.round(p.early), hi: Math.round(p.late), p: p.pid != null ? Math.round(p.pid) : null, a: null });
+    changed = true;
+  }
+  for (const x of accLog) if (x.a == null && obs[x.k] && obs[x.k].at) { x.a = Math.round(obs[x.k].at); changed = true; }
+  const before = accLog.length;
+  accLog = accLog.filter(x => x.t > now - 45 * 86400e3 && (x.a != null || x.t > now - 3 * 3600e3)); // drop old entries, and ones never matched
+  if (accLog.length > 3000) accLog = accLog.slice(-3000);
+  if (changed || accLog.length !== before) store.set('b58.acc', accLog);
+}
+const median = a => { if (!a.length) return null; const b = [...a].sort((x, y) => x - y), i = b.length >> 1; return b.length % 2 ? b[i] : (b[i - 1] + b[i]) / 2; };
+const secTxt = s => s == null ? '–' : (Math.abs(s) < 60 ? Math.round(Math.abs(s)) + ' s' : mmss(Math.abs(s)));
+const sgn = s => s == null ? '–' : (s > 0 ? '+' : s < 0 ? '−' : '') + secTxt(s);
+function renderAcc() {
+  const done = accLog.filter(x => x.a != null);
+  const days = new Set(done.map(x => x.k.split('|')[0])).size;
+  $('accSummary').textContent = done.length
+    ? `${new Set(done.map(x => x.k)).size} buses checked over ${days} ${days === 1 ? 'day' : 'days'}. Rows: how long before the bus the prediction was made. Mine / PID: typical miss (median). My bias: + means I predict too late. Too early: buses that came before my range started, the ones you could miss.`
+    : 'Nothing checked yet. Each bus is logged while this page is open and checked once it reaches Nový Prosek, so leave the page open for a few minutes on a few mornings.';
+  const tb = $('accTable').tBodies[0]; tb.replaceChildren();
+  for (const [lbl] of [...BUCKETS].reverse()) {
+    const r = done.filter(x => x.b === lbl), tr = el('tr');
+    const mine = r.map(x => (x.e - x.a) / 1000), pid = r.filter(x => x.p != null).map(x => (x.p - x.a) / 1000);
+    const before = r.filter(x => x.a < x.lo).length, inside = r.filter(x => x.a >= x.lo && x.a <= x.hi).length;
+    const mAbs = median(mine.map(Math.abs)), pAbs = median(pid.map(Math.abs));
+    tr.append(el('th', 'num', `${lbl} min`), el('td', 'num', String(r.length)));
+    const tdM = el('td', 'num', secTxt(mAbs)); if (mAbs != null && pAbs != null && mAbs < pAbs) tdM.className += ' win';
+    const tdP = el('td', 'num', secTxt(pAbs)); if (mAbs != null && pAbs != null && pAbs < mAbs) tdP.className += ' win';
+    tr.append(tdM, tdP, el('td', 'num', sgn(median(mine))), el('td', 'num', r.length ? `${Math.round(100 * inside / r.length)}%` : '–'), el('td', 'num' + (before ? ' warn' : ''), String(before)));
+    tb.append(tr);
+  }
+  // most recent buses, prediction made ~5 min before (or the closest bucket logged)
+  const L = $('accRecent'); L.replaceChildren();
+  const byTrip = new Map();
+  for (const x of done) { const c = byTrip.get(x.k); if (!c || Math.abs(x.b - 5) < Math.abs(c.b - 5)) byTrip.set(x.k, x); }
+  const recent = [...byTrip.values()].sort((a, b) => b.a - a.a).slice(0, 8);
+  for (const x of recent) {
+    const tr = el('tr'), ds = x.k.split('|')[0];
+    tr.append(el('td', 'num', `${ds === ymd(Date.now()) ? '' : +ds.slice(6) + '.' + +ds.slice(4, 6) + '. '}${hm(x.s)}`), el('td', 'num', hm(x.a)), el('td', 'num', `${sgn((x.e - x.a) / 1000)}`), el('td', 'num', x.p != null ? sgn((x.p - x.a) / 1000) : '–'), el('td', 'num', `${x.b} min`));
+    L.append(tr);
+  }
+  $('accRecentWrap').hidden = !recent.length;
+}
+function accCsv() {
+  const t = ms => ms == null ? '' : (() => { const p = parts(ms); return `${p.hour}:${p.minute}:${p.second}`; })();
+  const rows = [['date', 'trip', 'timetabled', 'lead_min', 'logged_at', 'mode', 'predicted', 'range_from', 'range_to', 'pid', 'actual']];
+  for (const x of accLog) { const [ds, tid] = x.k.split('|'); rows.push([ds, tid, t(x.s), x.b, t(x.t), x.m, t(x.e), t(x.lo), t(x.hi), t(x.p), t(x.a)]); }
+  return rows.map(r => r.join(',')).join('\n');
+}
+
+let lastModel = null;
+function compute(now) {
+  const list = buildInstances(now);
+  for (const I of list) annotate(I, now);
+  for (const I of list) {
+    recordObs(I, now);
+    if (I.mode === 'live' || I.mode === 'blind') addSegObs(I.stops, I.key, '58');
+  }
+  sharedObs();
+  pruneObs(now); pruneSeg(now);
+  store.set('b58.obs', obs); store.set('b58.seg', segObs);
+  const ctx = { factor: roadFactor(now) };
+  // timetable-only trips that should already be running but report nothing: show at their timetable time, no prediction
+  const ghost = I => I.mode === 'timetable' && now > I.start + 2 * MIN;
+  const upcoming = list.filter(I => !I.passedTarget && !(ghost(I) && I.S < now - MIN))
+    .map(I => ({ I, p: I.cancelled || ghost(I) ? null : predict(I, now, ctx) }))
+    .sort((a, b) => (a.p ? a.p.eta : a.I.S) - (b.p ? b.p.eta : b.I.S));
+  // a timetable-only trip whose start has long passed without data is unreliable; keep it but don't recommend it
+  const usable = upcoming.filter(x => x.p);
+  logPredictions(upcoming, now);
+  return { now, upcoming, usable, ctx };
+}
+
+function render() {
+  const now = Date.now();
+  const m = lastModel = compute(now);
+  const walkMs = settings.walk * MIN;
+  const catchable = m.usable.filter(x => x.p.early - walkMs >= now - 20e3);
+  const pick = catchable[0], after = catchable[1];
+
+  if (!feed && !lastError) { /* first load still running */ }
+  if (pick) {
+    const leave = pick.p.early - walkMs, mins = Math.floor((leave - now) / MIN);
+    $('heroLbl').textContent = 'Leave';
+    $('heroBig').textContent = mins <= 0 ? 'Now' : `in ${mins} min`;
+    $('heroSub').textContent = `by ${hmFloor(leave)} for the bus expected ${hmRound(pick.p.eta)} (${hmRound(pick.p.early)}–${hmRound(pick.p.late)})`;
+    const T = pick.I.stops[pick.I.stops.length - 1];
+    const why = [`Timetabled ${hm(T.arr)}, predicted ${fmtDelay(pick.p.D)}.`];
+    if (pick.I.mode === 'live') why.push('Tracked live.');
+    else if (pick.I.mode === 'waiting') why.push('Hasn\'t departed yet, so the range is wider.');
+    else if (pick.I.mode === 'timetable') why.push('No live data yet; based on how fast the road is moving now.');
+    else if (pick.I.mode === 'blind') why.push('Position not reported; using PID\'s delays.');
+    $('heroWhy').textContent = why.join(' ');
+    $('heroNext').hidden = !after;
+    if (after) $('heroNext').textContent = `If you miss it: next expected ${hmRound(after.p.eta)}, leave by ${hmFloor(after.p.early - walkMs)}`;
+  } else {
+    $('heroLbl').textContent = 'Leave';
+    $('heroBig').textContent = '—';
+    $('heroSub').textContent = feed ? 'No catchable bus in the next 2½ hours' : (lastError ? 'Live data unavailable' : 'Reading live positions of line 58');
+    $('heroWhy').textContent = ''; $('heroNext').hidden = true;
+  }
+
+  // list
+  const L = $('list'); L.replaceChildren();
+  const shown = m.upcoming.slice(0, 6);
+  if (!shown.length) L.append(el('div', 'row', 'No buses scheduled soon.'));
+  for (const { I, p } of shown) {
+    const T = I.stops[I.stops.length - 1];
+    const row = el('div', 'row');
+    if (pick && pick.I === I) row.classList.add('catch');
+    if (!p || (I.mode === 'timetable' && now > I.start + 2 * MIN) || (p && p.early - walkMs < now - 20e3)) row.classList.add('dim');
+    row.append(el('div', 'eta num', p ? hmRound(p.eta) : hm(T.arr)));
+    row.append(el('div', 'sched num', 'tt ' + hm(T.arr)));
+    const [st, det] = describe(I, p, now);
+    const info = el('div', 'info'); info.append(el('div', 'st', st)); if (det) info.append(el('div', 'det num', det));
+    row.append(info);
+    let chip;
+    if (!p) chip = el('div', 'chip na', I.cancelled ? 'cancel' : '?');
+    else if (I.mode === 'timetable') chip = el('div', 'chip na num', '~' + fmtDelay(p.D).replace(' min', ''));
+    else chip = el('div', 'chip num ' + chipClass(p.D), fmtDelay(p.D).replace(' min', ''));
+    if (p) chip.title = `Range ${hmRound(p.early)}–${hmRound(p.late)}`;
+    row.append(chip);
+    L.append(row);
+  }
+
+  drawChart(m);
+  renderRoad(m);
+  renderAcc();
+  const age = feed ? now - feed.at : 0;
+  $('upd').textContent = fetching ? 'Updating…' : feed ? (age < 120e3 ? `Updated ${Math.max(0, Math.round(age / 1000))} s ago` : `Data ${Math.round(age / MIN)} min old`) : (lastError ? 'Offline' : 'Loading…');
+  $('upd').classList.toggle('stale', !!feed && !fetching && age >= 120e3);
+  $('usage').textContent = bytesUsed ? `Used ${(bytesUsed / 1e6).toFixed(1)} MB since you opened this page.` : '';
+  const msg = [];
+  if (lastError) msg.push(`Couldn't load live data (${lastError}). Showing the timetable; it retries automatically.`);
+  if (ymd(now) > TT.feedEnd) msg.push(`The built-in timetable ended on ${TT.feedEnd.slice(6)}.${TT.feedEnd.slice(4, 6)}.; times assume the same weekly pattern. Rebuild the page for exact times.`);
+  else if (usedFallback) msg.push('Some trips weren\'t in the built-in timetable; their times are matched from similar trips.');
+  $('msg').hidden = !msg.length; $('msg').textContent = msg.join(' ');
+}
+
+const mmss = s => { const v = Math.round(Math.abs(s)); return (s < 0 ? '−' : '') + Math.floor(v / 60) + ':' + String(v % 60).padStart(2, '0'); };
+function renderRoad(m) {
+  const R = $('road'); R.replaceChildren();
+  const now = m.now, ref = m.upcoming.map(x => x.I);
+  let withData = 0;
+  for (let i = 0; i + 1 < LONGEST.length; i++) {
+    const a = LONGEST[i][1], b = LONGEST[i + 1][1], k = a + '>' + b;
+    // timetable time for this stretch, from the next 58 that drives it
+    let sched = null;
+    for (const I of ref) { const j = I.stops.findIndex(s => s.stop === a); if (j >= 0 && I.stops[j + 1] && I.stops[j + 1].stop === b) { sched = segSched(I.stops[j], I.stops[j + 1]); break; } }
+    if (sched == null) sched = (i + 2 === LONGEST.length ? LONGEST[i + 1][2] : LONGEST[i + 1][3]) - LONGEST[i][3];
+    const e = segEst(k, now);
+    const row = el('div', 'seg');
+    row.append(el('div', 'nm', `${name(a)} → ${name(b)}`));
+    if (e) {
+      withData++;
+      const d = e.rNow - sched;
+      row.append(el('div', 'val num ' + (d >= 180 ? 'bad' : d >= 60 ? 'mid' : 'ok'), mmss(e.rNow)));
+    } else row.append(el('div', 'val na', 'no recent bus'));
+    const sub = el('div', 'sub num');
+    sub.append(el('span', null, `timetable ${mmss(sched)}`));
+    if (e) sub.append(el('span', null, `${e.n} ${e.n === 1 ? 'bus' : 'buses'} in 20 min: ${e.lines.join(', ')} · last ${Math.max(0, Math.round((now - e.last) / MIN))} min ago`));
+    if (e && e.slope != null && Math.abs(e.slope * 10) >= 20) sub.append(el('span', 'trend ' + (e.slope > 0 ? 'up' : 'down'), e.slope > 0 ? `slowing, +${Math.round(e.slope * 10)} s per 10 min` : `easing, ${Math.round(e.slope * 10)} s per 10 min`));
+    const lane = TT.busLanes[k]; if (lane >= 0.3) sub.append(el('span', 'lane', `bus lane ${Math.round(lane * 100)}%`));
+    row.append(sub);
+    R.append(row);
+  }
+  const f = m.ctx.factor;
+  $('roadNote').textContent = withData
+    ? `Times are what buses of the 58 and the lines sharing each stretch actually took (median, recent ones count more). Stretches with no recent bus use the timetable × ${f.toFixed(2)}, the current slowdown on the rest of the road.`
+    : 'No bus has driven these stretches since the page started collecting. Times fill in after a refresh or two.';
+}
+
+function drawChart(m) {
+  const now = m.now, W = 360, H = 180, pl = 34, pr = 10, pt = 10, pb = 24;
+  const x0 = now - 45 * MIN, x1 = now + 45 * MIN;
+  const past = Object.values(obs).filter(o => o.at && o.d[TARGET] != null && o.S >= x0 && o.S <= x1).map(o => ({ S: o.S, d: o.d[TARGET] / 60 }));
+  const fut = m.upcoming.filter(x => x.p && x.I.S >= x0 && x.I.S <= x1).map(x => {
+    const T = x.I.stops[x.I.stops.length - 1];
+    return { S: T.arr, d: x.p.D / 60, lo: (x.p.early - T.arr) / MIN, hi: (x.p.late - T.arr) / MIN, pid: x.p.pid != null ? (x.p.pid - T.arr) / MIN : null, tt: x.I.mode === 'timetable' };
+  });
+  const vals = [0, 5, ...past.map(p => p.d), ...fut.map(f => f.hi), ...fut.map(f => f.lo)];
+  let y0 = Math.floor(Math.min(...vals)), y1 = Math.ceil(Math.max(...vals));
+  y0 = Math.min(y0, 0); y1 = Math.max(y1, 5); y1 = Math.ceil(y1 / 5) * 5; if (y0 < 0) y0 = -Math.ceil(-y0 / 5) * 5;
+  const X = t => pl + (t - x0) / (x1 - x0) * (W - pl - pr), Y = v => pt + (y1 - v) / (y1 - y0) * (H - pt - pb);
+  const step = y1 - y0 > 20 ? 10 : 5;
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Delay of each bus at Nový Prosek">`;
+  for (let v = y0; v <= y1; v += step) s += `<line x1="${pl}" x2="${W - pr}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)" stroke-width="${v === 0 ? 1.4 : 1}"/><text x="${pl - 6}" y="${Y(v) + 4}" text-anchor="end">${v > 0 ? '+' : ''}${v}</text>`;
+  for (let t = Math.ceil(x0 / (15 * MIN)) * 15 * MIN; t <= x1; t += 15 * MIN) s += `<text x="${X(t)}" y="${H - 6}" text-anchor="middle">${hm(t)}</text>`;
+  s += `<line x1="${X(now)}" x2="${X(now)}" y1="${pt}" y2="${H - pb}" stroke="var(--muted)" stroke-dasharray="3 3"/><text x="${X(now) + 4}" y="${pt + 10}">now</text>`;
+  if (past.length > 1) s += `<polyline fill="none" stroke="var(--fg)" stroke-opacity=".35" stroke-width="1.5" points="${past.sort((a, b) => a.S - b.S).map(p => X(p.S) + ',' + Y(p.d)).join(' ')}"/>`;
+  for (const p of past) s += `<circle cx="${X(p.S)}" cy="${Y(p.d)}" r="4" fill="var(--fg)"/>`;
+  for (const f of fut) {
+    s += `<line x1="${X(f.S)}" x2="${X(f.S)}" y1="${Y(f.hi)}" y2="${Y(f.lo)}" stroke="var(--accent)" stroke-opacity=".45" stroke-width="5" stroke-linecap="round"/>`;
+    if (f.pid != null) s += `<line x1="${X(f.S) - 6}" x2="${X(f.S) + 6}" y1="${Y(f.pid)}" y2="${Y(f.pid)}" stroke="var(--pid)" stroke-width="2.5"/>`;
+    s += `<circle cx="${X(f.S)}" cy="${Y(f.d)}" r="4.5" fill="${f.tt ? 'var(--card)' : 'var(--accent)'}" stroke="var(--accent)" stroke-width="2"/>`;
+  }
+  s += `<text x="${pl}" y="${H - pb + 2}" dy="-4" text-anchor="start" style="font-size:10px">min</text></svg>`;
+  $('chart').innerHTML = s;
+}
+
+/* ---------- fetching ---------- */
+async function load() {
+  if (fetching) return;
+  fetching = true; render();
+  try {
+    const [a, b] = await Promise.all([FEED_TU, FEED_VP].map(async u => {
+      const r = await fetch(u, { cache: 'no-store' });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return new Uint8Array(await r.arrayBuffer());
+    }));
+    bytesUsed += a.length + b.length;
+    feed = { tu: parseTU(a), vp: parseVP(b), at: Date.now() };
+    trackPositions();
+    lastError = null;
+  } catch (e) {
+    lastError = navigator.onLine === false ? 'offline' : (e.message || 'network error');
+  } finally { fetching = false; render(); }
+}
+
+function applySettings() {
+  $('walk').textContent = settings.walk; $('autoMode').value = settings.autoMode; store.set('b58.settings', settings);
+  const k = netKind();
+  $('netNote').textContent = settings.autoMode !== 'wifi' ? ''
+    : k === 'wifi' ? 'On Wi-Fi now: refreshing every minute.'
+    : k === 'data' ? 'On mobile data: loaded once when opened. Tap Refresh to update (about 4 MB).'
+    : k === 'offline' ? 'Offline.'
+    : 'This browser doesn\'t say whether you\'re on Wi-Fi, so it treats the connection as mobile data: loaded once, tap Refresh to update.';
+}
+$('walkMinus').onclick = () => { settings.walk = Math.max(1, settings.walk - 1); applySettings(); render(); };
+$('walkPlus').onclick = () => { settings.walk = Math.min(30, settings.walk + 1); applySettings(); render(); };
+$('autoMode').onchange = e => { settings.autoMode = e.target.value; applySettings(); render(); };
+if (conn && conn.addEventListener) conn.addEventListener('change', () => { applySettings(); render(); });
+$('btnRefresh').onclick = load;
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) return;
+  const age = feed ? Date.now() - feed.at : Infinity;
+  if ((autoOn() && age > 45e3) || age > OPEN_AGAIN) load(); else render();
+});
+let quickSecond = true; // on Wi-Fi, a second fetch 30 s after opening gives two GPS positions (standing-still detection)
+setInterval(() => {
+  if (document.hidden) return;
+  const age = feed ? Date.now() - feed.at : 0;
+  if (feed && autoOn() && (age > 60e3 || (quickSecond && age > 30e3))) { quickSecond = false; load(); }
+  else if (!fetching) render();
+}, 5e3);
+$('ttInfo').textContent = `Timetable built in: ${TT.feedStart.slice(6)}.${TT.feedStart.slice(4, 6)}.–${TT.feedEnd.slice(6)}.${TT.feedEnd.slice(4, 6)}.${TT.feedEnd.slice(0, 4)} (${TT.trips.length} trips).`;
+applySettings(); render(); load();
+$('accCopy').onclick = () => {
+  const csv = accCsv(), ta = $('accText');
+  const fallback = () => { ta.hidden = false; ta.value = csv; ta.focus(); ta.select(); $('accMsg').textContent = 'Select all and copy the text below.'; };
+  let settled = false;
+  const ok = () => { settled = true; $('accMsg').textContent = `Copied ${accLog.length} rows.`; };
+  const fail = () => { if (!settled) { settled = true; fallback(); } };
+  try { navigator.clipboard.writeText(csv).then(ok, fail); } catch { fail(); }
+  setTimeout(fail, 1500); // some browsers never answer; show the text instead
+};
+let clearArmed = 0;
+$('accClear').onclick = () => {
+  if (Date.now() - clearArmed > 4000) { clearArmed = Date.now(); $('accClear').textContent = 'Tap again to clear'; setTimeout(() => { $('accClear').textContent = 'Clear log'; }, 4000); return; }
+  accLog = []; store.set('b58.acc', accLog); clearArmed = 0; $('accClear').textContent = 'Clear log'; $('accMsg').textContent = 'Log cleared.'; render();
+};
+window.b58 = { compute, get feed() { return feed; }, get obs() { return obs; }, get acc() { return accLog; }, predict };
+</script>
+</body>
+</html>

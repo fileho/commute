@@ -1,0 +1,18 @@
+{
+  "id": "./",
+  "name": "58 from Nový Prosek",
+  "short_name": "Bus 58",
+  "description": "When trolleybus 58 really reaches Nový Prosek towards Palmovka, and when to leave.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#80166F",
+  "theme_color": "#80166F",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
